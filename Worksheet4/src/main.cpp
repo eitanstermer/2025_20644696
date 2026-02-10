@@ -1,7 +1,8 @@
 #include <iostream>
+#include "adder.h"
 
 int main()
 {
-    std::cout << "Hello from Worksheet 4" << std::endl;
+    std::cout << "6 + 7 = " << add(6, 7) << std::endl;
     return 0;
 }

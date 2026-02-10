@@ -9,6 +9,9 @@
 .vs/
 x64/
 *.vcxproj.user
+*.sln
+*.user
+*.db
 
 # Build folders
 bin/
@@ -17,3 +20,8 @@ out/
 
 # ===== Worksheet 4 =====
 Worksheet4/build/
+
+# CMake / build
+build/
+CMakeFiles/
+CMakeCache.txt
