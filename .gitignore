@@ -3,11 +3,14 @@
 *.dll
 *.lib
 *.obj
+*.exp
 
 # Visual Studio
 .vs/
 x64/
 *.vcxproj.user
 
-# Keep empty lib folders
-!**/.gitkeep
+# Build folders
+bin/
+build/
+out/
