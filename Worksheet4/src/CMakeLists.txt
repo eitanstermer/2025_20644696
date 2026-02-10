@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
+project(worksheet4_ex4 LANGUAGES CXX)
 
-project(worksheet4_ex3)
+add_library(adder SHARED adder.cpp)
 
-# Create static library
-add_library(adder STATIC adder.cpp)
+target_compile_definitions(adder PRIVATE ADDER_EXPORTS)
 
-# Create executable
-add_executable(worksheet4_ex3 main.cpp)
+add_executable(worksheet4_ex4 main.cpp)
 
-# Link static library into executable
-target_link_libraries(worksheet4_ex3 adder)
+target_link_libraries(worksheet4_ex4 PRIVATE adder)
