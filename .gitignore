@@ -14,3 +14,6 @@ x64/
 bin/
 build/
 out/
+
+# ===== Worksheet 4 =====
+Worksheet4/build/
