@@ -1,9 +1,13 @@
 # Compiled outputs
 *.exe
+*.dll
+*.lib
 *.obj
 
 # Visual Studio
 .vs/
 x64/
 *.vcxproj.user
-*.exp
+
+# Keep empty lib folders
+!**/.gitkeep
