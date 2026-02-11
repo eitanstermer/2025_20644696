@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.20)
-project(worksheet4_ex4 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+project(calc)
 
-add_library(adder SHARED adder.cpp)
+add_library(maths adder.cpp)
 
-target_compile_definitions(adder PRIVATE ADDER_EXPORTS)
+if (NOT BUILD_SHARED_LIBS)
+  add_definitions(-Dmaths_STATIC)
+endif()
 
-add_executable(worksheet4_ex4 main.cpp)
-
-target_link_libraries(worksheet4_ex4 PRIVATE adder)
+add_executable(calc main.cpp)
+target_link_libraries(calc maths)

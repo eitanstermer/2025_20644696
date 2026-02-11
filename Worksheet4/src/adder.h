@@ -1,13 +1,13 @@
 #pragma once
 
-#ifdef _WIN32
-  #ifdef ADDER_EXPORTS
-    #define ADDER_API __declspec(dllexport)
-  #else
-    #define ADDER_API __declspec(dllimport)
-  #endif
+#ifdef maths_STATIC
+  #define MATHSLIB_API
 #else
-  #define ADDER_API
+  #ifdef maths_EXPORTS
+    #define MATHSLIB_API __declspec(dllexport)
+  #else
+    #define MATHSLIB_API __declspec(dllimport)
+  #endif
 #endif
 
-extern "C" ADDER_API int add(int a, int b);
+extern "C" MATHSLIB_API int add(int a, int b);
