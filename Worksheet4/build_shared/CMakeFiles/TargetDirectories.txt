@@ -1,4 +1,0 @@
-C:/Users/eitan/2025_20644696/Worksheet4/build_shared/CMakeFiles/maths.dir
-C:/Users/eitan/2025_20644696/Worksheet4/build_shared/CMakeFiles/calc.dir
-C:/Users/eitan/2025_20644696/Worksheet4/build_shared/CMakeFiles/ALL_BUILD.dir
-C:/Users/eitan/2025_20644696/Worksheet4/build_shared/CMakeFiles/ZERO_CHECK.dir
