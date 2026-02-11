@@ -1,3 +1,7 @@
+/**
+ * @brief Simple addition function used for Doxygen CI testing.
+ */
+
 #ifndef ADDER_H
 #define ADDER_H
 
