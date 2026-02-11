@@ -1,0 +1,4 @@
+C:/Users/eitan/2025_20644696/Worksheet4/build/CMakeFiles/adder.dir
+C:/Users/eitan/2025_20644696/Worksheet4/build/CMakeFiles/worksheet4_ex.dir
+C:/Users/eitan/2025_20644696/Worksheet4/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/eitan/2025_20644696/Worksheet4/build/CMakeFiles/ZERO_CHECK.dir

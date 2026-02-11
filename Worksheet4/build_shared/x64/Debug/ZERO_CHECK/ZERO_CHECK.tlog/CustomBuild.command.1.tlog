@@ -1,0 +1,10 @@
+^C:\USERS\EITAN\2025_20644696\WORKSHEET4\BUILD_SHARED\CMAKEFILES\DBC302A7755C872D80551A630DFEF46E\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/eitan/2025_20644696/Worksheet4/src -BC:/Users/eitan/2025_20644696/Worksheet4/build_shared --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/eitan/2025_20644696/Worksheet4/build_shared/calc.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

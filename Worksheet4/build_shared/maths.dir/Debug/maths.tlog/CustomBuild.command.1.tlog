@@ -1,0 +1,10 @@
+^C:\USERS\EITAN\2025_20644696\WORKSHEET4\SRC\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/eitan/2025_20644696/Worksheet4/src -BC:/Users/eitan/2025_20644696/Worksheet4/build_shared --check-stamp-file C:/Users/eitan/2025_20644696/Worksheet4/build_shared/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
