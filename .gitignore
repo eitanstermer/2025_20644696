@@ -12,6 +12,13 @@ x64/
 *.sln
 *.user
 *.db
+*.pdb
+*.ilk
+*.obj
+*.exe
+*.dll
+*.lib
+*.ipch
 
 # Build folders
 bin/
