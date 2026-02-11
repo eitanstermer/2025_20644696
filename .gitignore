@@ -25,3 +25,6 @@ Worksheet4/build/
 build/
 CMakeFiles/
 CMakeCache.txt
+
+# Doxygen generated documentation
+Worksheet5/html/
