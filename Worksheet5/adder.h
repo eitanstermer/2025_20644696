@@ -1,6 +1,6 @@
 /**
  * @file adder.h
- * @brief Header file for add function.
+ * @brief Header file for add function. Eitan
  */
 
 #ifndef ADDER_H
