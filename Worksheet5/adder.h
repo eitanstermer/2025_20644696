@@ -1,10 +1,17 @@
+/**
+ * @file adder.h
+ * @brief Header file for add function.
+ */
+
 #ifndef ADDER_H
 #define ADDER_H
 
 /**
  * @brief Adds two integers.
- *
- * This function is part of the Worksheet5 documentation test.
+ * 
+ * @param a First integer
+ * @param b Second integer
+ * @return int Sum of a and b
  */
 int add(int a, int b);
 
