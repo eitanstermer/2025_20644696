@@ -28,6 +28,12 @@ MainWindow::MainWindow(QWidget* parent)
     ui->toolBar->addAction(ui->actionOpen_File);
 
     // ------------------------------------------------------------
+    // Exercise 10: Context menu action on tree view
+    // (Requires treeView ContextMenuPolicy = ActionsContextMenu in Designer)
+    // ------------------------------------------------------------
+    ui->treeView->addAction(ui->actionItem_Options);
+
+    // ------------------------------------------------------------
     // Status bar updates via a signal
     // ------------------------------------------------------------
     connect(this, &MainWindow::statusUpdateMessage,
@@ -90,13 +96,13 @@ void MainWindow::handleButton()
 
 void MainWindow::handleButton2()
 {
+    // Keep your existing Ex9 button behaviour
     QModelIndex current = ui->treeView->currentIndex();
     if (!current.isValid()) {
         emit statusUpdateMessage("Select a tree item first", 2000);
         return;
     }
 
-    // We want the item pointer so we can pre-fill the dialog
     ModelPart* selectedPart = static_cast<ModelPart*>(current.internalPointer());
     if (!selectedPart) {
         emit statusUpdateMessage("Select a tree item first", 2000);
@@ -107,14 +113,9 @@ void MainWindow::handleButton2()
     dialog.setFromModelPart(selectedPart);
 
     if (dialog.exec() == QDialog::Accepted) {
-        // Apply back to the ModelPart object
         dialog.applyToModelPart(selectedPart);
 
-        // Now update the view via the MODEL so it redraws and persists:
-        // Update name column
         ui->treeView->model()->setData(current.siblingAtColumn(0), selectedPart->name(), Qt::EditRole);
-
-        // Update visible column
         ui->treeView->model()->setData(current.siblingAtColumn(1), selectedPart->isVisible(), Qt::EditRole);
 
         emit statusUpdateMessage("Dialog accepted", 2000);
@@ -166,4 +167,34 @@ void MainWindow::on_actionOpen_File_triggered()
     ui->treeView->model()->setData(current.siblingAtColumn(0), baseName, Qt::EditRole);
 
     emit statusUpdateMessage("Renamed selected item to: " + baseName, 2000);
+}
+
+void MainWindow::on_actionItem_Options_triggered()
+{
+    // Exercise 10: open dialog from right-click menu
+    QModelIndex current = ui->treeView->currentIndex();
+    if (!current.isValid()) {
+        emit statusUpdateMessage("Right-click a tree item (select one first)", 2000);
+        return;
+    }
+
+    ModelPart* selectedPart = static_cast<ModelPart*>(current.internalPointer());
+    if (!selectedPart) {
+        emit statusUpdateMessage("Right-click a tree item (select one first)", 2000);
+        return;
+    }
+
+    OptionDialog dialog(this);
+    dialog.setFromModelPart(selectedPart);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        dialog.applyToModelPart(selectedPart);
+
+        ui->treeView->model()->setData(current.siblingAtColumn(0), selectedPart->name(), Qt::EditRole);
+        ui->treeView->model()->setData(current.siblingAtColumn(1), selectedPart->isVisible(), Qt::EditRole);
+
+        emit statusUpdateMessage("Item Options accepted", 2000);
+    } else {
+        emit statusUpdateMessage("Item Options cancelled", 2000);
+    }
 }

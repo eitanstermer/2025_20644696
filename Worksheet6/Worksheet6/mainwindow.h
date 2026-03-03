@@ -29,6 +29,9 @@ public slots:
 
     void on_actionOpen_File_triggered();
 
+    // Exercise 10: context menu action slot
+    void on_actionItem_Options_triggered();
+
 private:
     Ui::MainWindow* ui;
     ModelPartList* partList;
