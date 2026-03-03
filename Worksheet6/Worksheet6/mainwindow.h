@@ -26,6 +26,9 @@ public slots:
     void handleButton2();
     void handleTreeClicked();
 
+    // Exercise 6: slot for the Open File action (created by Qt or added manually)
+    void on_actionOpen_File_triggered();
+
 private:
     Ui::MainWindow *ui;
     ModelPartList* partList;
