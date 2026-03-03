@@ -9,6 +9,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup()
 
+qt_add_resources(QRC_SOURCES resources.qrc)
+
 qt_add_executable(Worksheet6
     main.cpp
     mainwindow.cpp
@@ -18,6 +20,7 @@ qt_add_executable(Worksheet6
     ModelPart.h
     ModelPartList.cpp
     ModelPartList.h
+    ${QRC_SOURCES}
 )
 
 target_link_libraries(Worksheet6 PRIVATE Qt6::Widgets)

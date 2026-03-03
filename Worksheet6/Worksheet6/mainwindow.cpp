@@ -1,65 +1,79 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QTreeView>
 #include <QStatusBar>
+#include <QTreeView>
 #include <QModelIndex>
 #include <QString>
+#include <QIcon>
+#include <QSize>
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , partList(nullptr)
 {
     ui->setupUi(this);
 
-    // Link our signal to the status bar slot (worksheet pattern)
+    // ------------------------------------------------------------
+    // Exercise 6/7: Toolbar + icon from Qt resources
+    // ------------------------------------------------------------
+    ui->toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    ui->toolBar->setIconSize(QSize(32, 32));
+    ui->actionOpen_File->setIcon(QIcon(":/icons/open.png"));
+
+    // Make sure the action is actually on the toolbar
+    // (Designer can be flaky; this forces it)
+    ui->toolBar->addAction(ui->actionOpen_File);
+
+    // ------------------------------------------------------------
+    // Worksheet pattern: status bar updates via a signal
+    // ------------------------------------------------------------
     connect(this, &MainWindow::statusUpdateMessage,
-            ui->statusbar, &QStatusBar::showMessage);
+        ui->statusbar, &QStatusBar::showMessage);
 
     emit statusUpdateMessage("Ready", 0);
 
-    // Buttons (signoff requires at least one button does something)
+    // ------------------------------------------------------------
+    // Buttons (Ex1/2 signoff behaviour)
+    // ------------------------------------------------------------
     connect(ui->pushButton, &QPushButton::released,
-            this, &MainWindow::handleButton);
+        this, &MainWindow::handleButton);
 
     connect(ui->pushButton_2, &QPushButton::released,
-            this, &MainWindow::handleButton2);
+        this, &MainWindow::handleButton2);
 
-    // Tree click for Exercise 5
+    // ------------------------------------------------------------
+    // Tree click (Ex5)
+    // ------------------------------------------------------------
     connect(ui->treeView, &QTreeView::clicked,
-            this, &MainWindow::handleTreeClicked);
+        this, &MainWindow::handleTreeClicked);
 
-    // ============================================================
-    // Exercise 4: Working Tree View (worksheet demo code)
-    // ============================================================
+    // ------------------------------------------------------------
+    // Exercise 4: Tree model population
+    // ------------------------------------------------------------
+    partList = new ModelPartList("Parts List");
+    ui->treeView->setModel(partList);
 
-    this->partList = new ModelPartList("Parts List");
-    ui->treeView->setModel(this->partList);
-
-    ModelPart *rootItem = this->partList->getRootItem();
+    ModelPart* rootItem = partList->getRootItem();
 
     for (int i = 0; i < 3; i++) {
         QString name = QString("TopLevel %1").arg(i);
         QString visible("true");
 
-        ModelPart *childItem = new ModelPart({name, visible}, rootItem);
+        ModelPart* childItem = new ModelPart({ name, visible }, rootItem);
         rootItem->appendChild(childItem);
 
         for (int j = 0; j < 5; j++) {
             QString subName = QString("Item %1,%2").arg(i).arg(j);
             QString subVisible("true");
 
-            ModelPart *childChildItem = new ModelPart({subName, subVisible}, childItem);
+            ModelPart* childChildItem = new ModelPart({ subName, subVisible }, childItem);
             childItem->appendChild(childChildItem);
         }
     }
 
     ui->treeView->expandAll();
-
-    // NOTE: Worksheet says if you follow naming convention
-    // actionOpen_File + on_actionOpen_File_triggered(), Qt auto-connects.
-    // So we do NOT add a manual connect() here. :contentReference[oaicite:13]{index=13}
 }
 
 MainWindow::~MainWindow()
@@ -70,27 +84,29 @@ MainWindow::~MainWindow()
 
 void MainWindow::handleButton()
 {
-    emit statusUpdateMessage("Add button was clicked", 0);
+    emit statusUpdateMessage("Add button was clicked", 2000);
 }
 
 void MainWindow::handleButton2()
 {
-    emit statusUpdateMessage("Second button was clicked", 0);
+    emit statusUpdateMessage("Second button was clicked", 2000);
 }
 
 void MainWindow::handleTreeClicked()
 {
     QModelIndex index = ui->treeView->currentIndex();
-    ModelPart *selectedPart = static_cast<ModelPart*>(index.internalPointer());
+    ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
+
+    if (!selectedPart) {
+        emit statusUpdateMessage("No item selected", 2000);
+        return;
+    }
+
     QString text = selectedPart->data(0).toString();
-    emit statusUpdateMessage(QString("The selected item is: ") + text, 0);
+    emit statusUpdateMessage("Selected: " + text, 2000);
 }
 
-// ============================================================
-// Exercise 6: Open File action slot
-// Worksheet requires a statusbar message when action is triggered :contentReference[oaicite:14]{index=14}
-// ============================================================
 void MainWindow::on_actionOpen_File_triggered()
 {
-    emit statusUpdateMessage(QString("Open File action triggered"), 0);
+    emit statusUpdateMessage("Open File action triggered", 2000);
 }
