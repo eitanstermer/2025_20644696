@@ -1,116 +1,153 @@
 #include "ModelPartList.h"
 
-ModelPartList::ModelPartList(const QString &data, QObject *parent)
+#include <QStringList>
+
+ModelPartList::ModelPartList(const QString& data, QObject *parent)
     : QAbstractItemModel(parent)
 {
     QVector<QVariant> rootData;
     rootData << data << "Visible";
-    m_rootItem = new ModelPart(rootData);
+
+    rootItem = new ModelPart(rootData);
 }
 
 ModelPartList::~ModelPartList()
 {
-    delete m_rootItem;
+    delete rootItem;
 }
 
-int ModelPartList::columnCount(const QModelIndex &parent) const
+ModelPart* ModelPartList::getRootItem() const
 {
-    if (parent.isValid())
-        return static_cast<ModelPart*>(parent.internalPointer())->columnCount();
-    return m_rootItem->columnCount();
+    return rootItem;
 }
 
-QVariant ModelPartList::data(const QModelIndex &index, int role) const
+int ModelPartList::columnCount(const QModelIndex& parent) const
 {
-    if (!index.isValid())
-        return QVariant();
-
-    if (role != Qt::DisplayRole && role != Qt::EditRole)
-        return QVariant();
-
-    auto *item = static_cast<ModelPart*>(index.internalPointer());
-    return item->data(index.column());
+    if (parent.isValid()) {
+        ModelPart* parentItem = static_cast<ModelPart*>(parent.internalPointer());
+        return parentItem->columnCount();
+    }
+    return rootItem->columnCount();
 }
 
-Qt::ItemFlags ModelPartList::flags(const QModelIndex &index) const
+int ModelPartList::rowCount(const QModelIndex& parent) const
 {
-    if (!index.isValid())
-        return Qt::NoItemFlags;
+    ModelPart* parentItem;
 
-    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    if (!parent.isValid()) {
+        parentItem = rootItem;
+    } else {
+        parentItem = static_cast<ModelPart*>(parent.internalPointer());
+    }
+
+    return parentItem->childCount();
 }
 
-QVariant ModelPartList::headerData(int section, Qt::Orientation orientation, int role) const
-{
-    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
-        return m_rootItem->data(section);
-
-    return QVariant();
-}
-
-QModelIndex ModelPartList::index(int row, int column, const QModelIndex &parent) const
+QModelIndex ModelPartList::index(int row, int column, const QModelIndex& parent) const
 {
     if (!hasIndex(row, column, parent))
         return QModelIndex();
 
-    ModelPart *parentItem = nullptr;
+    ModelPart* parentItem;
 
-    if (!parent.isValid())
-        parentItem = m_rootItem;
-    else
+    if (!parent.isValid()) {
+        parentItem = rootItem;
+    } else {
         parentItem = static_cast<ModelPart*>(parent.internalPointer());
+    }
 
-    ModelPart *childItem = parentItem->child(row);
+    ModelPart* childItem = parentItem->child(row);
     if (childItem)
         return createIndex(row, column, childItem);
 
     return QModelIndex();
 }
 
-QModelIndex ModelPartList::parent(const QModelIndex &index) const
+QModelIndex ModelPartList::parent(const QModelIndex& index) const
 {
     if (!index.isValid())
         return QModelIndex();
 
-    auto *childItem = static_cast<ModelPart*>(index.internalPointer());
-    ModelPart *parentItem = childItem->parentItem();
+    ModelPart* childItem = static_cast<ModelPart*>(index.internalPointer());
+    ModelPart* parentItem = childItem->parentItem();
 
-    if (parentItem == m_rootItem || parentItem == nullptr)
+    if (parentItem == rootItem || parentItem == nullptr)
         return QModelIndex();
 
     return createIndex(parentItem->row(), 0, parentItem);
 }
 
-int ModelPartList::rowCount(const QModelIndex &parent) const
+QVariant ModelPartList::data(const QModelIndex& index, int role) const
 {
-    ModelPart *parentItem = nullptr;
+    if (!index.isValid())
+        return QVariant();
 
-    if (parent.column() > 0)
-        return 0;
+    ModelPart* item = static_cast<ModelPart*>(index.internalPointer());
 
-    if (!parent.isValid())
-        parentItem = m_rootItem;
-    else
-        parentItem = static_cast<ModelPart*>(parent.internalPointer());
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        // Column 0: Name
+        if (index.column() == 0) {
+            return item->data(0);
+        }
 
-    return parentItem->childCount();
+        // Column 1: Visible (show as "true"/"false")
+        if (index.column() == 1) {
+            bool v = item->data(1).toBool();
+            return v ? "true" : "false";
+        }
+    }
+
+    return QVariant();
 }
 
-bool ModelPartList::setData(const QModelIndex &index, const QVariant &value, int role)
+bool ModelPartList::setData(const QModelIndex& index, const QVariant& value, int role)
 {
+    if (!index.isValid())
+        return false;
+
     if (role != Qt::EditRole)
         return false;
 
-    auto *item = static_cast<ModelPart*>(index.internalPointer());
-    bool result = item->setData(index.column(), value);
+    ModelPart* item = static_cast<ModelPart*>(index.internalPointer());
+    bool ok = false;
 
-    if (result)
-        emit dataChanged(index, index, {role});
+    // Column 0: Name
+    if (index.column() == 0) {
+        ok = item->setData(0, value.toString());
+    }
 
-    return result;
+    // Column 1: Visible
+    if (index.column() == 1) {
+        ok = item->setData(1, value.toBool());
+    }
+
+    if (ok) {
+        emit dataChanged(index, index, { Qt::DisplayRole, Qt::EditRole });
+    }
+
+    return ok;
 }
 
-ModelPart *ModelPartList::getRootItem()
+Qt::ItemFlags ModelPartList::flags(const QModelIndex& index) const
 {
-    return m_rootItem;
+    if (!index.isValid())
+        return Qt::NoItemFlags;
+
+    Qt::ItemFlags f = QAbstractItemModel::flags(index);
+
+    // Allow editing of both columns (needed for setData to be used properly)
+    if (index.column() == 0 || index.column() == 1) {
+        f |= Qt::ItemIsEditable;
+    }
+
+    return f;
+}
+
+QVariant ModelPartList::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+        return rootItem->data(section);
+    }
+
+    return QVariant();
 }

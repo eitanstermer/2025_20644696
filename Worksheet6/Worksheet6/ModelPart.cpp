@@ -3,6 +3,7 @@
 ModelPart::ModelPart(const QVector<QVariant> &data, ModelPart *parentItem)
     : m_itemData(data)
     , m_parentItem(parentItem)
+    , m_colour(200, 200, 200) // default grey
 {
 }
 
@@ -59,4 +60,36 @@ int ModelPart::row() const
 ModelPart *ModelPart::parentItem()
 {
     return m_parentItem;
+}
+
+// ---- Convenience property helpers ----
+QString ModelPart::name() const
+{
+    return data(0).toString();
+}
+
+void ModelPart::setName(const QString &name)
+{
+    setData(0, name);
+}
+
+bool ModelPart::isVisible() const
+{
+    // If old data was "true"/"false" string, toBool() still works fine:
+    return data(1).toBool();
+}
+
+void ModelPart::setIsVisible(bool visible)
+{
+    setData(1, visible);
+}
+
+QColor ModelPart::colour() const
+{
+    return m_colour;
+}
+
+void ModelPart::setColour(const QColor &c)
+{
+    m_colour = c;
 }

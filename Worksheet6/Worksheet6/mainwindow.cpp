@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "optiondialog.h"
+
 #include <QStatusBar>
 #include <QTreeView>
 #include <QModelIndex>
@@ -23,12 +25,10 @@ MainWindow::MainWindow(QWidget* parent)
     ui->toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
     ui->toolBar->setIconSize(QSize(32, 32));
     ui->actionOpen_File->setIcon(QIcon(":/icons/open.png"));
-
-    // Force the action onto the toolbar (Designer can be flaky)
     ui->toolBar->addAction(ui->actionOpen_File);
 
     // ------------------------------------------------------------
-    // Worksheet pattern: status bar updates via a signal
+    // Status bar updates via a signal
     // ------------------------------------------------------------
     connect(this, &MainWindow::statusUpdateMessage,
             ui->statusbar, &QStatusBar::showMessage);
@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget* parent)
     emit statusUpdateMessage("Ready", 0);
 
     // ------------------------------------------------------------
-    // Buttons (Ex1/2 signoff behaviour)
+    // Buttons
     // ------------------------------------------------------------
     connect(ui->pushButton, &QPushButton::released,
             this, &MainWindow::handleButton);
@@ -45,14 +45,13 @@ MainWindow::MainWindow(QWidget* parent)
             this, &MainWindow::handleButton2);
 
     // ------------------------------------------------------------
-    // Tree click (Ex5)
-    // clicked(const QModelIndex&) -> slot must accept QModelIndex
+    // Tree click
     // ------------------------------------------------------------
     connect(ui->treeView, &QTreeView::clicked,
             this, &MainWindow::handleTreeClicked);
 
     // ------------------------------------------------------------
-    // Exercise 4: Tree model population
+    // Tree model population
     // ------------------------------------------------------------
     partList = new ModelPartList("Parts List");
     ui->treeView->setModel(partList);
@@ -61,14 +60,14 @@ MainWindow::MainWindow(QWidget* parent)
 
     for (int i = 0; i < 3; i++) {
         QString name = QString("TopLevel %1").arg(i);
-        QString visible("true");
+        bool visible = true;
 
         ModelPart* childItem = new ModelPart({ name, visible }, rootItem);
         rootItem->appendChild(childItem);
 
         for (int j = 0; j < 5; j++) {
             QString subName = QString("Item %1,%2").arg(i).arg(j);
-            QString subVisible("true");
+            bool subVisible = true;
 
             ModelPart* childChildItem = new ModelPart({ subName, subVisible }, childItem);
             childItem->appendChild(childChildItem);
@@ -91,7 +90,37 @@ void MainWindow::handleButton()
 
 void MainWindow::handleButton2()
 {
-    emit statusUpdateMessage("Second button was clicked", 2000);
+    QModelIndex current = ui->treeView->currentIndex();
+    if (!current.isValid()) {
+        emit statusUpdateMessage("Select a tree item first", 2000);
+        return;
+    }
+
+    // We want the item pointer so we can pre-fill the dialog
+    ModelPart* selectedPart = static_cast<ModelPart*>(current.internalPointer());
+    if (!selectedPart) {
+        emit statusUpdateMessage("Select a tree item first", 2000);
+        return;
+    }
+
+    OptionDialog dialog(this);
+    dialog.setFromModelPart(selectedPart);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        // Apply back to the ModelPart object
+        dialog.applyToModelPart(selectedPart);
+
+        // Now update the view via the MODEL so it redraws and persists:
+        // Update name column
+        ui->treeView->model()->setData(current.siblingAtColumn(0), selectedPart->name(), Qt::EditRole);
+
+        // Update visible column
+        ui->treeView->model()->setData(current.siblingAtColumn(1), selectedPart->isVisible(), Qt::EditRole);
+
+        emit statusUpdateMessage("Dialog accepted", 2000);
+    } else {
+        emit statusUpdateMessage("Dialog rejected", 2000);
+    }
 }
 
 void MainWindow::handleTreeClicked(const QModelIndex& index)
@@ -111,10 +140,6 @@ void MainWindow::handleTreeClicked(const QModelIndex& index)
     emit statusUpdateMessage("Selected: " + text, 2000);
 }
 
-// IMPORTANT:
-// This slot name MUST match the objectName of the QAction in the .ui file.
-// Your action is named: actionOpen_File
-// Therefore the auto-connected slot should be:
 void MainWindow::on_actionOpen_File_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(
@@ -131,35 +156,14 @@ void MainWindow::on_actionOpen_File_triggered()
 
     emit statusUpdateMessage("Selected: " + fileName, 2000);
 
-    // Sign-off behaviour: rename currently selected tree item to chosen filename
-    QModelIndex index = ui->treeView->currentIndex();
-    if (!index.isValid()) {
-        emit statusUpdateMessage("No tree item selected to rename", 2000);
+    QModelIndex current = ui->treeView->currentIndex();
+    if (!current.isValid()) {
+        emit statusUpdateMessage("Select a tree item first", 2000);
         return;
     }
 
     QString baseName = QFileInfo(fileName).fileName();
+    ui->treeView->model()->setData(current.siblingAtColumn(0), baseName, Qt::EditRole);
 
-    // Preferred: go through the model (if setData is implemented there)
-    bool changed = false;
-    if (ui->treeView->model()) {
-        changed = ui->treeView->model()->setData(index, baseName, Qt::EditRole);
-    }
-
-    // Fallback: update the underlying item directly (your ModelPart supports this)
-    if (!changed) {
-        ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
-        if (!selectedPart) {
-            emit statusUpdateMessage("Could not access selected item", 2000);
-            return;
-        }
-
-        // ModelPart::setData(int column, const QVariant& value)
-        selectedPart->setData(0, baseName);
-
-        // Force view repaint (model is not emitting dataChanged yet)
-        ui->treeView->viewport()->update();
-
-        emit statusUpdateMessage("Renamed selected item to: " + baseName, 2000);
-    }
+    emit statusUpdateMessage("Renamed selected item to: " + baseName, 2000);
 }

@@ -25,11 +25,8 @@ signals:
 public slots:
     void handleButton();
     void handleButton2();
-
-    // Must match QTreeView::clicked(const QModelIndex&)
     void handleTreeClicked(const QModelIndex& index);
 
-    // QAction objectName: actionOpen_File
     void on_actionOpen_File_triggered();
 
 private:

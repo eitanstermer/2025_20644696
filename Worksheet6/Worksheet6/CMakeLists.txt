@@ -21,6 +21,7 @@ qt_add_executable(Worksheet6
     ModelPartList.cpp
     ModelPartList.h
     ${QRC_SOURCES}
+    optiondialog.h optiondialog.cpp optiondialog.ui
 )
 
 target_link_libraries(Worksheet6 PRIVATE Qt6::Widgets)
