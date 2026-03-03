@@ -7,6 +7,8 @@
 #include <QString>
 #include <QIcon>
 #include <QSize>
+#include <QFileDialog>
+#include <QFileInfo>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -22,15 +24,14 @@ MainWindow::MainWindow(QWidget* parent)
     ui->toolBar->setIconSize(QSize(32, 32));
     ui->actionOpen_File->setIcon(QIcon(":/icons/open.png"));
 
-    // Make sure the action is actually on the toolbar
-    // (Designer can be flaky; this forces it)
+    // Force the action onto the toolbar (Designer can be flaky)
     ui->toolBar->addAction(ui->actionOpen_File);
 
     // ------------------------------------------------------------
     // Worksheet pattern: status bar updates via a signal
     // ------------------------------------------------------------
     connect(this, &MainWindow::statusUpdateMessage,
-        ui->statusbar, &QStatusBar::showMessage);
+            ui->statusbar, &QStatusBar::showMessage);
 
     emit statusUpdateMessage("Ready", 0);
 
@@ -38,16 +39,17 @@ MainWindow::MainWindow(QWidget* parent)
     // Buttons (Ex1/2 signoff behaviour)
     // ------------------------------------------------------------
     connect(ui->pushButton, &QPushButton::released,
-        this, &MainWindow::handleButton);
+            this, &MainWindow::handleButton);
 
     connect(ui->pushButton_2, &QPushButton::released,
-        this, &MainWindow::handleButton2);
+            this, &MainWindow::handleButton2);
 
     // ------------------------------------------------------------
     // Tree click (Ex5)
+    // clicked(const QModelIndex&) -> slot must accept QModelIndex
     // ------------------------------------------------------------
     connect(ui->treeView, &QTreeView::clicked,
-        this, &MainWindow::handleTreeClicked);
+            this, &MainWindow::handleTreeClicked);
 
     // ------------------------------------------------------------
     // Exercise 4: Tree model population
@@ -92,11 +94,14 @@ void MainWindow::handleButton2()
     emit statusUpdateMessage("Second button was clicked", 2000);
 }
 
-void MainWindow::handleTreeClicked()
+void MainWindow::handleTreeClicked(const QModelIndex& index)
 {
-    QModelIndex index = ui->treeView->currentIndex();
-    ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
+    if (!index.isValid()) {
+        emit statusUpdateMessage("No item selected", 2000);
+        return;
+    }
 
+    ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
     if (!selectedPart) {
         emit statusUpdateMessage("No item selected", 2000);
         return;
@@ -106,7 +111,55 @@ void MainWindow::handleTreeClicked()
     emit statusUpdateMessage("Selected: " + text, 2000);
 }
 
+// IMPORTANT:
+// This slot name MUST match the objectName of the QAction in the .ui file.
+// Your action is named: actionOpen_File
+// Therefore the auto-connected slot should be:
 void MainWindow::on_actionOpen_File_triggered()
 {
-    emit statusUpdateMessage("Open File action triggered", 2000);
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        tr("Open File"),
+        "C:\\",
+        tr("STL Files (*.stl);;Text Files (*.txt)")
+        );
+
+    if (fileName.isEmpty()) {
+        emit statusUpdateMessage("Open cancelled", 2000);
+        return;
+    }
+
+    emit statusUpdateMessage("Selected: " + fileName, 2000);
+
+    // Sign-off behaviour: rename currently selected tree item to chosen filename
+    QModelIndex index = ui->treeView->currentIndex();
+    if (!index.isValid()) {
+        emit statusUpdateMessage("No tree item selected to rename", 2000);
+        return;
+    }
+
+    QString baseName = QFileInfo(fileName).fileName();
+
+    // Preferred: go through the model (if setData is implemented there)
+    bool changed = false;
+    if (ui->treeView->model()) {
+        changed = ui->treeView->model()->setData(index, baseName, Qt::EditRole);
+    }
+
+    // Fallback: update the underlying item directly (your ModelPart supports this)
+    if (!changed) {
+        ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
+        if (!selectedPart) {
+            emit statusUpdateMessage("Could not access selected item", 2000);
+            return;
+        }
+
+        // ModelPart::setData(int column, const QVariant& value)
+        selectedPart->setData(0, baseName);
+
+        // Force view repaint (model is not emitting dataChanged yet)
+        ui->treeView->viewport()->update();
+
+        emit statusUpdateMessage("Renamed selected item to: " + baseName, 2000);
+    }
 }
